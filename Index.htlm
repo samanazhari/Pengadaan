@@ -1,0 +1,405 @@
+<!-- Chosen Palette: Serene Sage (Latar belakang netral hangat, aksen biru/hijau lembut, teks abu-abu) -->
+<!-- Application Structure Plan: Menggunakan pendekatan hierarchical dashboard dengan navigasi sidebar. Struktur ini dipilih untuk memungkinkan pengguna memilih Peraturan utama (misal Perpres 16/2018), kemudian melihat daftar BAB dan PASAL di dalamnya. Ini mendukung eksplorasi mendalam secara terstruktur dan memudahkan navigasi non-linear dari peraturan yang kompleks. Sebuah ringkasan umum untuk setiap peraturan akan ditampilkan, diikuti dengan navigasi BAB/PASAL. Tombol menu hamburger disediakan untuk akses sidebar di perangkat seluler. -->
+<!-- Visualization & Content Choices:
+- Peraturan List (Sidebar): HTML ul/li/button. Goal: Organize. Interaction: Click to select. Justification: Standard for primary navigation. Library: HTML/CSS/Vanilla JS.
+- Main Content Area: HTML div with dynamic innerHTML updates. Goal: Inform. Interaction: None (for the content display itself). Justification: Display text/HTML content of selected Bab/Pasal. Library: HTML/CSS/Vanilla JS.
+- Bab/Pasal List (Sub-menu in Main Content): HTML ul/li/button. Goal: Organize. Interaction: Click to select. Justification: Standard for secondary navigation (nested hierarchy). Library: HTML/CSS/Vanilla JS.
+- Search Functionality: HTML input with JS filtering. Goal: Inform/Explore. Interaction: Type to filter regulation/section titles. Justification: Essential for large text datasets. Library: HTML/CSS/Vanilla JS.
+CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Peraturan Pengadaan Barang & Jasa</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9f7; /* Warm Neutral Background */
+            color: #334155; /* Slate-700 for main text */
+        }
+        .main-container {
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem;
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Active navigation link styling */
+        .nav-link.active-link {
+            background-color: #dbeafe; /* bg-blue-100 */
+            color: #1e40af; /* text-blue-800 */
+            font-weight: 600; /* font-semibold */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-blue-700 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="main-container flex items-center justify-between">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Peraturan Pengadaan Barang & Jasa</h1>
+            <button id="menu-toggle" class="md:hidden p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <span class="text-2xl">☰</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Konten Utama (Sidebar + Main Content) -->
+    <div class="flex flex-1 overflow-hidden main-container pt-4 md:pt-8">
+        <!-- Sidebar Navigation -->
+        <nav id="sidebar" class="w-64 bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-y-auto custom-scrollbar flex-shrink-0 md:block hidden mr-4 shadow-md">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Daftar Peraturan</h2>
+            <div class="mb-4">
+                <input type="text" id="regulation-search-input" placeholder="Cari Peraturan/Bab/Pasal..."
+                       class="w-full pl-3 pr-3 py-2 rounded-md bg-white border border-gray-300 placeholder-gray-400 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-200 text-sm">
+            </div>
+            <ul id="regulation-list" class="space-y-2">
+                <!-- Regulasi akan dimuat di sini oleh JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Dynamic Content Area -->
+        <main id="content-area" class="flex-1 bg-white p-6 rounded-lg shadow-md overflow-y-auto custom-scrollbar">
+            <!-- Konten akan dimuat secara dinamis di sini -->
+            <section id="section-default" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Selamat Datang di Aplikasi Peraturan Pengadaan!</h2>
+                <p class="mb-6 text-gray-700">
+                    Aplikasi ini dirancang untuk membantu para praktisi pengadaan barang dan jasa dalam mengakses peraturan pemerintah dengan mudah dan cepat. Anda dapat menjelajahi berbagai peraturan, bab, dan pasal.
+                </p>
+                <p class="mb-4 text-gray-700">
+                    Untuk memulai, silakan pilih peraturan dari daftar "Daftar Peraturan" di menu samping kiri. Anda juga dapat menggunakan kolom pencarian di sidebar untuk menemukan informasi yang Anda butuhkan.
+                </p>
+                <div class="bg-blue-50 p-4 rounded-lg text-blue-800 border border-blue-200">
+                    <p class="text-sm">
+                        Catatan: Ini adalah prototipe. Data yang disajikan di dalamnya adalah contoh (mock-up) dan disederhanakan dari peraturan aslinya. Anda dapat mengisi data lengkap dari peraturan Anda sendiri nanti.
+                    </p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Data TSV Mock-up (akan digantikan dengan data lengkap Anda nanti)
+        // Kolom: PeraturanID	SectionType	SectionID	SectionTitle	ContentHTML
+        const mockTSVData = `
+PeraturanID	SectionType	SectionID	SectionTitle	ContentHTML
+PERPRES_16_2018	Peraturan	PERPRES_16_2018_ROOT	Peraturan Presiden Nomor 16 Tahun 2018	<h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 16 Tahun 2018</h3><p class="mb-4">Peraturan Presiden ini adalah landasan utama dalam proses pengadaan barang/jasa pemerintah di Indonesia. Meskipun telah diubah oleh Perpres 12 Tahun 2021 dan 46 Tahun 2025, prinsip-prinsip dasarnya tetap menjadi acuan penting bagi para praktisi.</p><p class="mb-4">Perpres ini mengatur berbagai aspek mulai dari perencanaan, pelaksanaan, hingga serah terima hasil pekerjaan. Prinsip-prinsip penting seperti efisien, efektif, transparan, terbuka, bersaing, adil, dan akuntabel diatur di dalamnya.</p><p class="mt-4 text-sm text-gray-500"><i>Pilih BAB atau Pasal dari menu samping untuk detail lebih lanjut.</i></p>
+PERPRES_16_2018	Bab	BAB_I_P16	BAB I Ketentuan Umum	<h4 class="text-lg font-semibold mb-2 text-gray-800">Ringkasan BAB I Ketentuan Umum</h4><p class="mb-2">Bab ini berisi definisi-definisi penting dan istilah-istilah kunci yang digunakan dalam Peraturan Presiden Nomor 16 Tahun 2018. Memahami definisi ini adalah langkah pertama untuk memahami seluruh peraturan.</p>
+PERPRES_16_2018	Pasal	PASAL_1_P16	Pasal 1	<h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 1</h4><p class="mb-2">Dalam Peraturan Presiden ini yang dimaksud dengan:</p><ol class="list-decimal list-inside space-y-1"><li><strong>Pengadaan Barang/Jasa Pemerintah</strong> yang selanjutnya disebut Pengadaan Barang/Jasa adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah yang dibiayai oleh APBN/APBD yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa.</li><li><strong>Kementerian Negara</strong> yang selanjutnya disebut Kementerian adalah perangkat Pemerintah yang membidangi urusan tertentu dalam pemerintahan.</li><li><strong>Lembaga</strong> adalah organisasi nonkementerian dan instansi lain pengguna Anggaran Pendapatan Belanja Negara atau Anggaran Pendapatan dan Belanja Daerah.</li><li>dan seterusnya... (definisi-definisi lain)</li></ol><p class="mt-4 text-sm text-gray-500"><i>(Konten ini adalah contoh dan disederhanakan dari teks asli Perpres 16/2018.)</i></p>
+PERPRES_16_2018	Bab	BAB_II_P16	BAB II Tujuan, Kebijakan, dan Prinsip Pengadaan Barang/Jasa	<h4 class="text-lg font-semibold mb-2 text-gray-800">Ringkasan BAB II Tujuan, Kebijakan, dan Prinsip Pengadaan Barang/Jasa</h4><p class="mb-2">Bab ini menguraikan tujuan fundamental, kebijakan strategis, dan prinsip-prinsip yang harus dipatuhi dalam setiap kegiatan pengadaan barang/jasa pemerintah, membentuk fondasi etika dan efisiensi.</p>
+PERPRES_16_2018	Pasal	PASAL_2_P16	Pasal 2	<h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 2</h4><p class="mb-2">Pengadaan Barang/Jasa bertujuan untuk:</p><ol class="list-decimal list-inside space-y-1"><li>menghasilkan barang/jasa yang tepat dari setiap uang yang dibelanjakan, diukur dari aspek kualitas, jumlah, waktu, biaya, lokasi, dan Penyedia;</li><li>meningkatkan penggunaan produk dalam negeri;</li><li>meningkatkan peran serta Usaha Mikro, Usaha Kecil, dan Usaha Menengah;</li><li>meningkatkan peran pelaku usaha nasional;</li><li>mendukung pemerataan ekonomi; dan</li><li>mendorong Pengadaan Berkelanjutan.</li></ol><p class="mt-4 text-sm text-gray-500"><i>(Konten ini adalah contoh dan disederhanakan dari teks asli Perpres 16/2018.)</i></p>
+PERPRES_16_2018	Pasal	PASAL_3_P16	Pasal 3	<h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 3</h4><p class="mb-2">(1) Kebijakan Umum Pengadaan Barang/Jasa meliputi:</p><ol class="list-alpha list-inside space-y-1"><li>meningkatkan kualitas perencanaan Pengadaan Barang/Jasa;</li><li>melaksanakan Pengadaan Barang/Jasa secara elektronik;</li><li>mendorong Pengadaan Barang/Jasa yang berkelanjutan;</li><li>mengoptimalkan penggunaan Barang/Jasa hasil produksi dalam negeri;</li><li>dan seterusnya... (kebijakan lainnya)</li></ol><p class="mt-4 text-sm text-gray-500"><i>(Konten ini adalah contoh dan disederhanakan dari teks asli Perpres 16/2018.)</i></p>
+PERPRES_46_2025	Peraturan	PERPRES_46_2025_ROOT	Peraturan Presiden Nomor 46 Tahun 2025	<h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 46 Tahun 2025</h3><p class="mb-4">Peraturan Presiden ini adalah Perubahan Kedua atas Perpres Nomor 16 Tahun 2018. Ini memperkenalkan penyempurnaan dan penyesuaian regulasi untuk menghadapi dinamika pengadaan terkini, memastikan efisiensi dan akuntabilitas yang lebih baik.</p><p class="mt-4 text-sm text-gray-500"><i>(Konten ini adalah contoh dan akan diisi lebih lanjut dengan detail perubahan yang Anda inginkan.)</i></p>
+PERPRES_46_2025	Bab	BAB_I_P46	BAB I Ketentuan Umum (Perubahan)	<h4 class="text-lg font-semibold mb-2 text-gray-800">Ringkasan BAB I Ketentuan Umum (Perubahan)</h4><p class="mb-2">Bab ini mencakup perubahan pada definisi dan istilah yang ada dalam Perpres 16 Tahun 2018.</p>
+PERPRES_46_2025	Pasal	PASAL_1_P46	Pasal 1 (Perubahan)	<h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 1 (Perubahan)</h4><p class="mb-2">Beberapa ketentuan dalam Pasal 1 Peraturan Presiden Nomor 16 Tahun 2018 diubah sebagai berikut:</p><ol class="list-decimal list-inside space-y-1"><li>Ketentuan mengenai definisi "Unit Kerja Pengadaan Barang/Jasa" diubah.</li><li>Ditambahkan definisi baru mengenai "Kontrak Payung".</li></ol><p class="mt-4 text-sm text-gray-500"><i>(Konten ini adalah contoh dan disederhanakan.)</i></p>
+        `.trim();
+
+        // --- Fungsi untuk memparsing string TSV menjadi struktur data hierarkis ---
+        function parseTSVAndStructureData(tsvString) {
+            const lines = tsvString.trim().split('\n');
+            const headers = lines[0].split('\t');
+            const flatData = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split('\t');
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header.trim()] = values[index] ? values[index].trim() : '';
+                });
+                flatData.push(row);
+            }
+
+            const regulations = {};
+
+            flatData.forEach(item => {
+                if (!regulations[item.PeraturanID]) {
+                    regulations[item.PeraturanID] = {
+                        id: item.PeraturanID,
+                        title: item.PeraturanTitle,
+                        subtitle: item.PeraturanSubTitle,
+                        overview_html: '',
+                        sections: []
+                    };
+                }
+
+                if (item.SectionType === 'Peraturan') {
+                    regulations[item.PeraturanID].overview_html = item.ContentHTML;
+                } else if (item.SectionType === 'Bab') {
+                    regulations[item.PeraturanID].sections.push({
+                        type: item.SectionType,
+                        id: item.SectionID,
+                        title: item.SectionTitle,
+                        content_html: item.ContentHTML,
+                        children: [] // For nested Pasals
+                    });
+                } else if (item.SectionType === 'Pasal') {
+                    const parentBabId = item.ParentSectionID || (item.SectionID.split('_').slice(0, -1).join('_')); // Simple guess parent if not specified
+                    const parentBab = regulations[item.PeraturanID].sections.find(sec => sec.id === parentBabId);
+                    if (parentBab) {
+                        parentBab.children.push({
+                            type: item.SectionType,
+                            id: item.SectionID,
+                            title: item.SectionTitle,
+                            content_html: item.ContentHTML
+                        });
+                    } else {
+                        // If parent Bab not found, attach directly under regulation for now
+                        // In a real app, ensure ParentSectionID is correctly provided in TSV for all Pasals
+                        regulations[item.PeraturanID].sections.push({
+                             type: item.SectionType,
+                             id: item.SectionID,
+                             title: item.SectionTitle,
+                             content_html: item.ContentHTML
+                        });
+                    }
+                }
+            });
+
+            return Object.values(regulations); // Convert object of regulations to array
+        }
+
+        const parsedRegulationsData = parseTSVAndStructureData(mockTSVData);
+        let currentRegulationId = null;
+        let currentSectionId = null; // Current active Bab/Pasal ID
+
+        const regulationListUl = document.getElementById('regulation-list');
+        const contentArea = document.getElementById('content-area');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const regulationSearchInput = document.getElementById('regulation-search-input');
+
+        // --- Fungsi untuk merender daftar peraturan di sidebar ---
+        function renderRegulationList(filterText = '') {
+            regulationListUl.innerHTML = '';
+            const filteredRegulations = parsedRegulationsData.filter(reg =>
+                reg.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                reg.subtitle.toLowerCase().includes(filterText.toLowerCase()) ||
+                reg.sections.some(sec =>
+                    sec.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                    (sec.content_html && sec.content_html.toLowerCase().includes(filterText.toLowerCase())) ||
+                    sec.children.some(child =>
+                        child.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                        (child.content_html && child.content_html.toLowerCase().includes(filterText.toLowerCase()))
+                    )
+                )
+            );
+
+            if (filteredRegulations.length === 0 && filterText !== '') {
+                const li = document.createElement('li');
+                li.className = 'p-3 text-gray-600';
+                li.textContent = 'Tidak ada peraturan yang ditemukan.';
+                regulationListUl.appendChild(li);
+                return;
+            }
+
+            filteredRegulations.forEach(reg => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `nav-link w-full text-left p-3 rounded-md hover:bg-gray-200 transition duration-200 ease-in-out ${reg.id === currentRegulationId ? 'active-link' : ''}`;
+                button.textContent = reg.title;
+                button.setAttribute('data-id', reg.id);
+                button.onclick = () => selectRegulation(reg.id);
+                li.appendChild(button);
+                regulationListUl.appendChild(li);
+            });
+        }
+
+        // --- Fungsi untuk memilih peraturan utama dan menampilkan isinya ---
+        function selectRegulation(regId) {
+            currentRegulationId = regId;
+            currentSectionId = null; // Reset active section
+            const selectedReg = parsedRegulationsData.find(reg => reg.id === regId);
+
+            if (!selectedReg) {
+                contentArea.innerHTML = '<h2 class="text-2xl font-bold text-gray-800 mb-4">Peraturan tidak ditemukan.</h2><p class="text-gray-700">Silakan pilih dari daftar yang tersedia.</p>';
+                return;
+            }
+
+            // Update active class in sidebar
+            document.querySelectorAll('#regulation-list .nav-link').forEach(link => {
+                link.classList.remove('active-link');
+            });
+            document.querySelector(`#regulation-list button[data-id="${regId}"]`).classList.add('active-link');
+
+            // Construct content
+            let contentHtml = `<h2 class="text-3xl font-bold text-gray-800 mb-4">${selectedReg.title}</h2>`;
+            if (selectedReg.subtitle) {
+                contentHtml += `<p class="text-gray-600 italic mb-4">${selectedReg.subtitle}</p>`;
+            }
+            contentHtml += `<div class="bg-gray-100 p-4 rounded-lg mb-6">${selectedReg.overview_html}</div>`;
+
+            // Add sub-menu for sections (Bab/Pasal)
+            if (selectedReg.sections.length > 0) {
+                contentHtml += `<h3 class="text-2xl font-semibold text-gray-800 mb-3">Daftar Isi</h3><ul class="space-y-2 mb-6" id="section-nav-list">`;
+                selectedReg.sections.forEach(section => {
+                    contentHtml += `<li><button class="nav-link w-full text-left p-2 rounded-md hover:bg-gray-100 transition duration-200 ease-in-out" data-id="${section.id}" data-type="${section.type}" data-parent-reg="${regId}">${section.title}</button></li>`;
+                    if (section.children && section.children.length > 0) {
+                        contentHtml += `<ul class="ml-4 space-y-1">`;
+                        section.children.forEach(child => {
+                            contentHtml += `<li><button class="nav-link w-full text-left text-sm p-2 rounded-md hover:bg-gray-100 transition duration-200 ease-in-out" data-id="${child.id}" data-type="${child.type}" data-parent-section="${section.id}" data-parent-reg="${regId}">${child.title}</button></li>`;
+                        });
+                        contentHtml += `</ul>`;
+                    }
+                });
+                contentHtml += `</ul>`;
+            }
+
+            contentArea.innerHTML = contentHtml;
+
+            // Attach event listeners for dynamic section/pasal buttons
+            document.querySelectorAll('#section-nav-list .nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    const sectionId = link.dataset.id;
+                    const sectionType = link.dataset.type;
+                    const parentRegId = link.dataset.parentReg;
+                    const parentSectionId = link.dataset.parentSection; // For pasal's parent bab
+
+                    selectSection(parentRegId, sectionId, sectionType, parentSectionId);
+                });
+            });
+
+            // Hide sidebar on mobile after selection
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('absolute', 'top-16', 'left-4', 'z-40', 'w-64');
+            }
+        }
+
+        // --- Fungsi untuk memilih Bab/Pasal dan menampilkan isinya ---
+        function selectSection(regId, sectionId, sectionType, parentSectionId = null) {
+            currentSectionId = sectionId;
+            const selectedReg = parsedRegulationsData.find(reg => reg.id === regId);
+            let targetSection = null;
+
+            if (selectedReg) {
+                if (sectionType === 'Bab') {
+                    targetSection = selectedReg.sections.find(sec => sec.id === sectionId);
+                } else if (sectionType === 'Pasal') {
+                    const parentBab = selectedReg.sections.find(sec => sec.id === parentSectionId);
+                    if (parentBab && parentBab.children) {
+                        targetSection = parentBab.children.find(child => child.id === sectionId);
+                    }
+                }
+            }
+
+            if (targetSection) {
+                let contentHtml = `<h2 class="text-3xl font-bold text-gray-800 mb-4">${selectedReg.title}</h2>`;
+                contentHtml += `<h3 class="text-2xl font-semibold text-blue-700 mb-3">${targetSection.title}</h3>`;
+                contentHtml += `<div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">${targetSection.content_html}</div>`;
+
+                contentArea.innerHTML = contentHtml;
+
+                // Update active class for Bab/Pasal
+                document.querySelectorAll('#section-nav-list .nav-link').forEach(link => {
+                    link.classList.remove('active-link');
+                });
+                const activeLink = document.querySelector(`#section-nav-list button[data-id="${sectionId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active-link');
+                }
+
+            } else {
+                 contentArea.innerHTML = '<h2 class="text-2xl font-bold text-gray-800 mb-4">Bagian tidak ditemukan.</h2><p class="text-gray-700">Silakan pilih dari daftar yang tersedia.</p>';
+            }
+
+             // Hide sidebar on mobile after selection
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('absolute', 'top-16', 'left-4', 'z-40', 'w-64');
+            }
+        }
+
+        // Mobile menu toggle
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('absolute');
+            sidebar.classList.toggle('top-16');
+            sidebar.classList.toggle('left-4');
+            sidebar.classList.toggle('z-40');
+            sidebar.classList.toggle('w-64');
+        });
+
+        // Search functionality (filtering sidebar list)
+        let searchTimeout = null;
+        regulationSearchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            const query = event.target.value;
+            searchTimeout = setTimeout(() => {
+                renderRegulationList(query);
+                if (query === '') {
+                     // If search is cleared, reset content to default welcome message
+                     contentArea.innerHTML = `
+                        <section id="section-default" class="content-section">
+                            <h2 class="text-3xl font-bold text-gray-800 mb-4">Selamat Datang di Aplikasi Peraturan Pengadaan!</h2>
+                            <p class="mb-6 text-gray-700">
+                                Aplikasi ini dirancang untuk membantu para praktisi pengadaan barang dan jasa dalam mengakses peraturan pemerintah dengan mudah dan cepat. Anda dapat menjelajahi berbagai peraturan, bab, dan pasal.
+                            </p>
+                            <p class="mb-4 text-gray-700">
+                                Untuk memulai, silakan pilih peraturan dari daftar "Daftar Peraturan" di menu samping kiri. Anda juga dapat menggunakan kolom pencarian di sidebar untuk menemukan informasi yang Anda butuhkan.
+                            </p>
+                            <div class="bg-blue-50 p-4 rounded-lg text-blue-800 border border-blue-200">
+                                <p class="text-sm">
+                                    Catatan: Ini adalah prototipe. Data yang disajikan di dalamnya adalah contoh (mock-up) dan disederhanakan dari peraturan aslinya. Anda dapat mengisi data lengkap dari peraturan Anda sendiri nanti.
+                                </p>
+                            </div>
+                        </section>
+                     `;
+                }
+            }, 300); // Debounce search input
+        });
+
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRegulationList(); // Render main regulations initially
+            // Ensure default welcome section is shown
+            document.getElementById('section-default').classList.remove('hidden');
+
+            // Apply correct initial visibility for sidebar based on screen width
+            if (window.innerWidth < 768) { // Less than md breakpoint (768px)
+                sidebar.classList.add('hidden'); // Hide sidebar by default on mobile
+                menuToggle.classList.remove('hidden'); // Ensure hamburger is visible
+            } else { // md breakpoint (768px) or larger
+                sidebar.classList.remove('hidden', 'absolute', 'top-16', 'left-4', 'z-40', 'w-64'); // Show sidebar, remove mobile specific classes
+                menuToggle.classList.add('hidden'); // Ensure hamburger is hidden
+            }
+        });
+
+        // Handle window resize for sidebar visibility
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) { // md breakpoint (768px) or larger
+                sidebar.classList.remove('hidden', 'absolute', 'top-16', 'left-4', 'z-40', 'w-64'); // Show sidebar
+                menuToggle.classList.add('hidden'); // Hide menu toggle
+            } else { // Less than md breakpoint (768px)
+                // If it was open on desktop and now resized to mobile, make it hidden by default.
+                // If the user *opened* it on mobile, the toggle logic takes over.
+                if (!sidebar.classList.contains('hidden')) { // If sidebar is currently visible (was shown on desktop)
+                     sidebar.classList.add('absolute', 'top-16', 'left-4', 'z-40', 'w-64'); // Make it overlay the content
+                } else { // If sidebar is already hidden (e.g. user closed it on mobile)
+                    sidebar.classList.remove('absolute', 'top-16', 'left-4', 'z-40', 'w-64'); // Ensure mobile positioning removed if already hidden
+                }
+                menuToggle.classList.remove('hidden'); // Ensure menu toggle is visible on mobile
+            }
+        });
+    </script>
+</body>
+</html>
+```
