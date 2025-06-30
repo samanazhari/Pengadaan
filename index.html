@@ -1,1 +1,990 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Peraturan Pengadaan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Latar belakang terang */
+        }
+        /* Custom scrollbar for content area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
 
+        /* Basic transition for menu items */
+        .menu-item {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .menu-item:hover {
+            background-color: #e2e8f0;
+        }
+        .menu-item.active {
+            background-color: #d1e7ff; /* Light blue for active item */
+            font-weight: bold;
+            color: #1e40af; /* Darker blue text */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-blue-700 text-white p-4 shadow-lg flex items-center justify-between sticky top-0 z-50">
+        <h1 class="text-xl sm:text-2xl font-bold">Aplikasi Pengadaan Barang & Jasa</h1>
+        <div class="relative w-1/3 sm:w-1/4">
+            <input type="text" id="search-input" placeholder="Cari Peraturan..."
+                   class="w-full pl-10 pr-4 py-2 rounded-md bg-blue-600 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white focus:text-gray-800 transition duration-200">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 focus:text-gray-800 transition duration-200" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+    </header>
+
+    <!-- Konten Utama (Sidebar + Main Content) -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Menu -->
+        <nav id="sidebar" class="w-64 bg-gray-100 border-r border-gray-200 p-4 overflow-y-auto custom-scrollbar flex-shrink-0 hidden md:block">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Daftar Peraturan</h2>
+            <ul id="regulation-list">
+                <!-- Regulasi akan dimuat di sini oleh JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
+            <h2 id="content-title" class="text-2xl font-bold text-gray-800 mb-4">Pilih Peraturan dari Menu</h2>
+            <div id="content-body" class="bg-white rounded-lg shadow-md p-6 leading-relaxed text-gray-700">
+                <p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p>
+                <p class="mt-4 text-sm text-gray-500">
+                    *Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.
+                </p>
+            </div>
+
+            <!-- Sub-menu (Bab/Pasal) - Akan muncul setelah peraturan dipilih -->
+            <div id="sub-menu-container" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Bab / Pasal</h3>
+                <ul id="sub-menu-list" class="space-y-2">
+                    <!-- Sub-menu akan dimuat di sini oleh JavaScript -->
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simulasi data peraturan (dalam aplikasi nyata, ini bisa dari database atau file JSON)
+        // Saya asumsikan "format mirip HTML" berarti kita bisa menyimpan potongan HTML sebagai string di sini.
+        const regulationsData = [
+            {
+                id: 'perpres46_2025',
+                title: 'Perpres Nomor 46 Tahun 2025',
+                subtitle: 'Perubahan Kedua Atas Perpres Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 46 Tahun 2025</h3>
+                    <p class="mb-4">Peraturan Presiden ini mengubah beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah. Perubahan ini bertujuan untuk menyempurnakan dan menyesuaikan regulasi pengadaan agar lebih efektif dan efisien.</p>
+                    <p class="mb-4">Beberapa poin utama perubahan meliputi:</p>
+                    <ul class="list-disc list-inside space-y-1 mb-4">
+                        <li>Penyesuaian definisi dan istilah.</li>
+                        <li>Penyempurnaan proses perencanaan pengadaan.</li>
+                        <li>Penguatan pengawasan dan sanksi.</li>
+                        <li>Optimalisasi penggunaan produk dalam negeri.</li>
+                    </ul>
+                    <p>Untuk detail lebih lanjut, silakan telusuri bab dan pasal di bawah.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres46',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 1 diubah sehingga berbunyi "Pengadaan Barang/Jasa Pemerintah yang selanjutnya disebut Pengadaan Barang/Jasa adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak."</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres46',
+                        title: 'BAB II Ruang Lingkup dan Tujuan',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Ruang Lingkup dan Tujuan</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Ruang Lingkup Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa di lingkungan Kementerian/Lembaga/Perangkat Daerah yang dibiayai APBN/APBD.</li>
+                                <li>Pengadaan Barang/Jasa yang sebagian atau seluruhnya dibiayai dari pinjaman/hibah luar negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 3:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan barang/jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                                <li>Meningkatkan peran serta usaha mikro dan kecil.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perpres16_2018',
+                title: 'Perpres Nomor 16 Tahun 2018',
+                subtitle: 'Tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 16 Tahun 2018</h3>
+                    <p class="mb-4">Peraturan Presiden ini adalah landasan utama dalam proses pengadaan barang/jasa pemerintah di Indonesia. Meskipun telah diubah, prinsip-prinsip dasarnya tetap menjadi acuan.</p>
+                    <p class="mb-4">Perpres ini mengatur berbagai aspek mulai dari perencanaan, pelaksanaan, hingga serah terima hasil pekerjaan. Prinsip-prinsip penting seperti efisien, efektif, transparan, terbuka, bersaing, adil, dan akuntabel diatur di dalamnya.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres16',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Dalam Peraturan Presiden ini yang dimaksud dengan:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa Pemerintah adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa.</li>
+                                <li>Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak.</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres16',
+                        title: 'BAB II Tujuan, Kebijakan, dan Prinsip',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Tujuan, Kebijakan, dan Prinsip Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan Barang/Jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 6:</strong> Prinsip-prinsip Pengadaan Barang/Jasa meliputi:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Efisien, Efektif, Transparan, Terbuka, Bersaing, Adil, dan Akuntabel.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perlem4_2024',
+                title: 'Perlem LKPP Nomor 4 Tahun 2024',
+                subtitle: 'Perubahan Atas Perlem LKPP Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah Melalui Penyedia',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perlem LKPP 4 Tahun 2024</h3>
+                    <p class="mb-4">Peraturan Lembaga ini fokus pada pedoman pelaksanaan pengadaan barang/jasa pemerintah melalui penyedia, khususnya yang berkaitan dengan perubahan pada Peraturan Lembaga sebelumnya.</p>
+                    <p class="mb-4">Perubahan ini dimaksudkan untuk memberikan kejelasan dan efisiensi dalam proses pengadaan yang melibatkan pihak penyedia.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'pasal1_perlem4',
+                        title: 'Pasal 1',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 1 Perlem LKPP 4/2024</h4>
+                            <p>Beberapa ketentuan dalam Peraturan Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah melalui Penyedia, diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Pejabat Pengadaan adalah pejabat fungsional atau pejabat struktural yang diberi tugas, tanggung jawab, wewenang, dan hak secara penuh oleh PA/KPA untuk melaksanakan Pengadaan Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 15 diubah terkait proses pemilihan penyedia.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            }
+        ];
+
+        const regulationList = document.getElementById('regulation-list');
+        const contentTitle = document.getElementById('content-title');
+        const contentBody = document.getElementById('content-body');
+        const subMenuContainer = document.getElementById('sub-menu-container');
+        const subMenuList = document.getElementById('sub-menu-list');
+        const searchInput = document.getElementById('search-input');
+
+        let activeRegulationId = null;
+        let activeChapterId = null;
+
+        // Function to render main regulations in the sidebar
+        function renderRegulations(filter = '') {
+            regulationList.innerHTML = ''; // Clear existing list
+            const filteredRegulations = regulationsData.filter(reg =>
+                reg.title.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.subtitle.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.content_html.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.chapters.some(chap => chap.title.toLowerCase().includes(filter.toLowerCase()) || chap.content_html.toLowerCase().includes(filter.toLowerCase()))
+            );
+
+            if (filteredRegulations.length === 0 && filter !== '') {
+                regulationList.innerHTML = '<li class="p-2 text-gray-600">Tidak ada hasil ditemukan.</li>';
+                return;
+            }
+
+            filteredRegulations.forEach(reg => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${reg.id === activeRegulationId ? 'active' : ''}`;
+                button.textContent = reg.title;
+                button.onclick = () => selectRegulation(reg.id);
+                li.appendChild(button);
+                regulationList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a main regulation
+        function selectRegulation(regulationId) {
+            const selectedReg = regulationsData.find(reg => reg.id === regulationId);
+            if (selectedReg) {
+                activeRegulationId = regulationId;
+                activeChapterId = null; // Reset active chapter
+                contentTitle.textContent = selectedReg.title;
+                contentBody.innerHTML = `
+                    <div class="mb-4">
+                        <p class="text-gray-600 italic">${selectedReg.subtitle}</p>
+                        ${selectedReg.last_amended ? `<p class="text-sm text-gray-500">Terakhir diubah: ${selectedReg.last_amended}</p>` : ''}
+                    </div>
+                    ${selectedReg.content_html}
+                `;
+
+                // Render sub-menu (chapters)
+                renderSubMenu(selectedReg.chapters);
+                subMenuContainer.classList.remove('hidden');
+
+                // Update active class in sidebar
+                document.querySelectorAll('#regulation-list .menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`#regulation-list button[onclick*="${regulationId}"]`).classList.add('active');
+            }
+        }
+
+        // Function to render sub-menu (chapters)
+        function renderSubMenu(chapters) {
+            subMenuList.innerHTML = '';
+            chapters.forEach(chap => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${chap.id === activeChapterId ? 'active' : ''}`;
+                button.textContent = chap.title;
+                button.onclick = () => selectChapter(chap.id);
+                li.appendChild(button);
+                subMenuList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a chapter
+        function selectChapter(chapterId) {
+            const selectedReg = regulationsData.find(reg => reg.id === activeRegulationId);
+            if (selectedReg) {
+                const selectedChapter = selectedReg.chapters.find(chap => chap.id === chapterId);
+                if (selectedChapter) {
+                    activeChapterId = chapterId;
+                    contentTitle.textContent = `${selectedReg.title} - ${selectedChapter.title}`;
+                    contentBody.innerHTML = selectedChapter.content_html;
+
+                    // Update active class in sub-menu
+                    document.querySelectorAll('#sub-menu-list .menu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    document.querySelector(`#sub-menu-list button[onclick*="${chapterId}"]`).classList.add('active');
+                }
+            }
+        }
+
+        // Search functionality
+        let searchTimeout = null;
+        searchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            const query = event.target.value;
+            searchTimeout = setTimeout(() => {
+                renderRegulations(query);
+                // Optionally clear main content and sub-menu if search is active
+                if (query !== '') {
+                    contentTitle.textContent = 'Hasil Pencarian';
+                    contentBody.innerHTML = '<p class="text-gray-600">Pilih item dari daftar di samping untuk melihat detail.</p>';
+                    subMenuContainer.classList.add('hidden');
+                } else {
+                    // Reset to default view if search is cleared
+                    contentTitle.textContent = 'Pilih Peraturan dari Menu';
+                    contentBody.innerHTML = '<p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p><p class="mt-4 text-sm text-gray-500">*Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.</p>';
+                    subMenuContainer.classList.add('hidden');
+                    activeRegulationId = null;
+                    activeChapterId = null;
+                }
+            }, 300); // Debounce search input
+        });
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRegulations();
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Peraturan Pengadaan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Latar belakang terang */
+        }
+        /* Custom scrollbar for content area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Basic transition for menu items */
+        .menu-item {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .menu-item:hover {
+            background-color: #e2e8f0;
+        }
+        .menu-item.active {
+            background-color: #d1e7ff; /* Light blue for active item */
+            font-weight: bold;
+            color: #1e40af; /* Darker blue text */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-blue-700 text-white p-4 shadow-lg flex items-center justify-between sticky top-0 z-50">
+        <h1 class="text-xl sm:text-2xl font-bold">Aplikasi Pengadaan Barang & Jasa</h1>
+        <div class="relative w-1/3 sm:w-1/4">
+            <input type="text" id="search-input" placeholder="Cari Peraturan..."
+                   class="w-full pl-10 pr-4 py-2 rounded-md bg-blue-600 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white focus:text-gray-800 transition duration-200">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 focus:text-gray-800 transition duration-200" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+    </header>
+
+    <!-- Konten Utama (Sidebar + Main Content) -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Menu -->
+        <nav id="sidebar" class="w-64 bg-gray-100 border-r border-gray-200 p-4 overflow-y-auto custom-scrollbar flex-shrink-0 hidden md:block">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Daftar Peraturan</h2>
+            <ul id="regulation-list">
+                <!-- Regulasi akan dimuat di sini oleh JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
+            <h2 id="content-title" class="text-2xl font-bold text-gray-800 mb-4">Pilih Peraturan dari Menu</h2>
+            <div id="content-body" class="bg-white rounded-lg shadow-md p-6 leading-relaxed text-gray-700">
+                <p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p>
+                <p class="mt-4 text-sm text-gray-500">
+                    *Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.
+                </p>
+            </div>
+
+            <!-- Sub-menu (Bab/Pasal) - Akan muncul setelah peraturan dipilih -->
+            <div id="sub-menu-container" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Bab / Pasal</h3>
+                <ul id="sub-menu-list" class="space-y-2">
+                    <!-- Sub-menu akan dimuat di sini oleh JavaScript -->
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simulasi data peraturan (dalam aplikasi nyata, ini bisa dari database atau file JSON)
+        // Saya asumsikan "format mirip HTML" berarti kita bisa menyimpan potongan HTML sebagai string di sini.
+        const regulationsData = [
+            {
+                id: 'perpres46_2025',
+                title: 'Perpres Nomor 46 Tahun 2025',
+                subtitle: 'Perubahan Kedua Atas Perpres Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 46 Tahun 2025</h3>
+                    <p class="mb-4">Peraturan Presiden ini mengubah beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah. Perubahan ini bertujuan untuk menyempurnakan dan menyesuaikan regulasi pengadaan agar lebih efektif dan efisien.</p>
+                    <p class="mb-4">Beberapa poin utama perubahan meliputi:</p>
+                    <ul class="list-disc list-inside space-y-1 mb-4">
+                        <li>Penyesuaian definisi dan istilah.</li>
+                        <li>Penyempurnaan proses perencanaan pengadaan.</li>
+                        <li>Penguatan pengawasan dan sanksi.</li>
+                        <li>Optimalisasi penggunaan produk dalam negeri.</li>
+                    </ul>
+                    <p>Untuk detail lebih lanjut, silakan telusuri bab dan pasal di bawah.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres46',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 1 diubah sehingga berbunyi "Pengadaan Barang/Jasa Pemerintah yang selanjutnya disebut Pengadaan Barang/Jasa adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak."</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres46',
+                        title: 'BAB II Ruang Lingkup dan Tujuan',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Ruang Lingkup dan Tujuan</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Ruang Lingkup Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa di lingkungan Kementerian/Lembaga/Perangkat Daerah yang dibiayai APBN/APBD.</li>
+                                <li>Pengadaan Barang/Jasa yang sebagian atau seluruhnya dibiayai dari pinjaman/hibah luar negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 3:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan barang/jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                                <li>Meningkatkan peran serta usaha mikro dan kecil.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perpres16_2018',
+                title: 'Perpres Nomor 16 Tahun 2018',
+                subtitle: 'Tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 16 Tahun 2018</h3>
+                    <p class="mb-4">Peraturan Presiden ini adalah landasan utama dalam proses pengadaan barang/jasa pemerintah di Indonesia. Meskipun telah diubah, prinsip-prinsip dasarnya tetap menjadi acuan.</p>
+                    <p class="mb-4">Perpres ini mengatur berbagai aspek mulai dari perencanaan, pelaksanaan, hingga serah terima hasil pekerjaan. Prinsip-prinsip penting seperti efisien, efektif, transparan, terbuka, bersaing, adil, dan akuntabel diatur di dalamnya.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres16',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Dalam Peraturan Presiden ini yang dimaksud dengan:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa Pemerintah adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa.</li>
+                                <li>Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak.</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres16',
+                        title: 'BAB II Tujuan, Kebijakan, dan Prinsip',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Tujuan, Kebijakan, dan Prinsip Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan Barang/Jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 6:</strong> Prinsip-prinsip Pengadaan Barang/Jasa meliputi:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Efisien, Efektif, Transparan, Terbuka, Bersaing, Adil, dan Akuntabel.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perlem4_2024',
+                title: 'Perlem LKPP Nomor 4 Tahun 2024',
+                subtitle: 'Perubahan Atas Perlem LKPP Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah Melalui Penyedia',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perlem LKPP 4 Tahun 2024</h3>
+                    <p class="mb-4">Peraturan Lembaga ini fokus pada pedoman pelaksanaan pengadaan barang/jasa pemerintah melalui penyedia, khususnya yang berkaitan dengan perubahan pada Peraturan Lembaga sebelumnya.</p>
+                    <p class="mb-4">Perubahan ini dimaksudkan untuk memberikan kejelasan dan efisiensi dalam proses pengadaan yang melibatkan pihak penyedia.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'pasal1_perlem4',
+                        title: 'Pasal 1',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 1 Perlem LKPP 4/2024</h4>
+                            <p>Beberapa ketentuan dalam Peraturan Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah melalui Penyedia, diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Pejabat Pengadaan adalah pejabat fungsional atau pejabat struktural yang diberi tugas, tanggung jawab, wewenang, dan hak secara penuh oleh PA/KPA untuk melaksanakan Pengadaan Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 15 diubah terkait proses pemilihan penyedia.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            }
+        ];
+
+        const regulationList = document.getElementById('regulation-list');
+        const contentTitle = document.getElementById('content-title');
+        const contentBody = document.getElementById('content-body');
+        const subMenuContainer = document.getElementById('sub-menu-container');
+        const subMenuList = document.getElementById('sub-menu-list');
+        const searchInput = document.getElementById('search-input');
+
+        let activeRegulationId = null;
+        let activeChapterId = null;
+
+        // Function to render main regulations in the sidebar
+        function renderRegulations(filter = '') {
+            regulationList.innerHTML = ''; // Clear existing list
+            const filteredRegulations = regulationsData.filter(reg =>
+                reg.title.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.subtitle.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.content_html.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.chapters.some(chap => chap.title.toLowerCase().includes(filter.toLowerCase()) || chap.content_html.toLowerCase().includes(filter.toLowerCase()))
+            );
+
+            if (filteredRegulations.length === 0 && filter !== '') {
+                regulationList.innerHTML = '<li class="p-2 text-gray-600">Tidak ada hasil ditemukan.</li>';
+                return;
+            }
+
+            filteredRegulations.forEach(reg => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${reg.id === activeRegulationId ? 'active' : ''}`;
+                button.textContent = reg.title;
+                button.onclick = () => selectRegulation(reg.id);
+                li.appendChild(button);
+                regulationList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a main regulation
+        function selectRegulation(regulationId) {
+            const selectedReg = regulationsData.find(reg => reg.id === regulationId);
+            if (selectedReg) {
+                activeRegulationId = regulationId;
+                activeChapterId = null; // Reset active chapter
+                contentTitle.textContent = selectedReg.title;
+                contentBody.innerHTML = `
+                    <div class="mb-4">
+                        <p class="text-gray-600 italic">${selectedReg.subtitle}</p>
+                        ${selectedReg.last_amended ? `<p class="text-sm text-gray-500">Terakhir diubah: ${selectedReg.last_amended}</p>` : ''}
+                    </div>
+                    ${selectedReg.content_html}
+                `;
+
+                // Render sub-menu (chapters)
+                renderSubMenu(selectedReg.chapters);
+                subMenuContainer.classList.remove('hidden');
+
+                // Update active class in sidebar
+                document.querySelectorAll('#regulation-list .menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`#regulation-list button[onclick*="${regulationId}"]`).classList.add('active');
+            }
+        }
+
+        // Function to render sub-menu (chapters)
+        function renderSubMenu(chapters) {
+            subMenuList.innerHTML = '';
+            chapters.forEach(chap => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${chap.id === activeChapterId ? 'active' : ''}`;
+                button.textContent = chap.title;
+                button.onclick = () => selectChapter(chap.id);
+                li.appendChild(button);
+                subMenuList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a chapter
+        function selectChapter(chapterId) {
+            const selectedReg = regulationsData.find(reg => reg.id === activeRegulationId);
+            if (selectedReg) {
+                const selectedChapter = selectedReg.chapters.find(chap => chap.id === chapterId);
+                if (selectedChapter) {
+                    activeChapterId = chapterId;
+                    contentTitle.textContent = `${selectedReg.title} - ${selectedChapter.title}`;
+                    contentBody.innerHTML = selectedChapter.content_html;
+
+                    // Update active class in sub-menu
+                    document.querySelectorAll('#sub-menu-list .menu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    document.querySelector(`#sub-menu-list button[onclick*="${chapterId}"]`).classList.add('active');
+                }
+            }
+        }
+
+        // Search functionality
+        let searchTimeout = null;
+        searchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            const query = event.target.value;
+            searchTimeout = setTimeout(() => {
+                renderRegulations(query);
+                // Optionally clear main content and sub-menu if search is active
+                if (query !== '') {
+                    contentTitle.textContent = 'Hasil Pencarian';
+                    contentBody.innerHTML = '<p class="text-gray-600">Pilih item dari daftar di samping untuk melihat detail.</p>';
+                    subMenuContainer.classList.add('hidden');
+                } else {
+                    // Reset to default view if search is cleared
+                    contentTitle.textContent = 'Pilih Peraturan dari Menu';
+                    contentBody.innerHTML = '<p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p><p class="mt-4 text-sm text-gray-500">*Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.</p>';
+                    subMenuContainer.classList.add('hidden');
+                    activeRegulationId = null;
+                    activeChapterId = null;
+                }
+            }, 300); // Debounce search input
+        });
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRegulations();
+        });
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Peraturan Pengadaan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Latar belakang terang */
+        }
+        /* Custom scrollbar for content area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Basic transition for menu items */
+        .menu-item {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .menu-item:hover {
+            background-color: #e2e8f0;
+        }
+        .menu-item.active {
+            background-color: #d1e7ff; /* Light blue for active item */
+            font-weight: bold;
+            color: #1e40af; /* Darker blue text */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-blue-700 text-white p-4 shadow-lg flex items-center justify-between sticky top-0 z-50">
+        <h1 class="text-xl sm:text-2xl font-bold">Aplikasi Pengadaan Barang & Jasa</h1>
+        <div class="relative w-1/3 sm:w-1/4">
+            <input type="text" id="search-input" placeholder="Cari Peraturan..."
+                   class="w-full pl-10 pr-4 py-2 rounded-md bg-blue-600 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white focus:text-gray-800 transition duration-200">
+            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-200 focus:text-gray-800 transition duration-200" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+    </header>
+
+    <!-- Konten Utama (Sidebar + Main Content) -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Menu -->
+        <nav id="sidebar" class="w-64 bg-gray-100 border-r border-gray-200 p-4 overflow-y-auto custom-scrollbar flex-shrink-0 hidden md:block">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Daftar Peraturan</h2>
+            <ul id="regulation-list">
+                <!-- Regulasi akan dimuat di sini oleh JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
+            <h2 id="content-title" class="text-2xl font-bold text-gray-800 mb-4">Pilih Peraturan dari Menu</h2>
+            <div id="content-body" class="bg-white rounded-lg shadow-md p-6 leading-relaxed text-gray-700">
+                <p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p>
+                <p class="mt-4 text-sm text-gray-500">
+                    *Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.
+                </p>
+            </div>
+
+            <!-- Sub-menu (Bab/Pasal) - Akan muncul setelah peraturan dipilih -->
+            <div id="sub-menu-container" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-3">Bab / Pasal</h3>
+                <ul id="sub-menu-list" class="space-y-2">
+                    <!-- Sub-menu akan dimuat di sini oleh JavaScript -->
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Simulasi data peraturan (dalam aplikasi nyata, ini bisa dari database atau file JSON)
+        // Saya asumsikan "format mirip HTML" berarti kita bisa menyimpan potongan HTML sebagai string di sini.
+        const regulationsData = [
+            {
+                id: 'perpres46_2025',
+                title: 'Perpres Nomor 46 Tahun 2025',
+                subtitle: 'Perubahan Kedua Atas Perpres Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 46 Tahun 2025</h3>
+                    <p class="mb-4">Peraturan Presiden ini mengubah beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah. Perubahan ini bertujuan untuk menyempurnakan dan menyesuaikan regulasi pengadaan agar lebih efektif dan efisien.</p>
+                    <p class="mb-4">Beberapa poin utama perubahan meliputi:</p>
+                    <ul class="list-disc list-inside space-y-1 mb-4">
+                        <li>Penyesuaian definisi dan istilah.</li>
+                        <li>Penyempurnaan proses perencanaan pengadaan.</li>
+                        <li>Penguatan pengawasan dan sanksi.</li>
+                        <li>Optimalisasi penggunaan produk dalam negeri.</li>
+                    </ul>
+                    <p>Untuk detail lebih lanjut, silakan telusuri bab dan pasal di bawah.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres46',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Beberapa ketentuan dalam Peraturan Presiden Nomor 16 Tahun 2018 tentang Pengadaan Barang/Jasa Pemerintah diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 1 diubah sehingga berbunyi "Pengadaan Barang/Jasa Pemerintah yang selanjutnya disebut Pengadaan Barang/Jasa adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak."</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres46',
+                        title: 'BAB II Ruang Lingkup dan Tujuan',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Ruang Lingkup dan Tujuan</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Ruang Lingkup Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa di lingkungan Kementerian/Lembaga/Perangkat Daerah yang dibiayai APBN/APBD.</li>
+                                <li>Pengadaan Barang/Jasa yang sebagian atau seluruhnya dibiayai dari pinjaman/hibah luar negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 3:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan barang/jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                                <li>Meningkatkan peran serta usaha mikro dan kecil.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perpres16_2018',
+                title: 'Perpres Nomor 16 Tahun 2018',
+                subtitle: 'Tentang Pengadaan Barang/Jasa Pemerintah',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perpres 16 Tahun 2018</h3>
+                    <p class="mb-4">Peraturan Presiden ini adalah landasan utama dalam proses pengadaan barang/jasa pemerintah di Indonesia. Meskipun telah diubah, prinsip-prinsip dasarnya tetap menjadi acuan.</p>
+                    <p class="mb-4">Perpres ini mengatur berbagai aspek mulai dari perencanaan, pelaksanaan, hingga serah terima hasil pekerjaan. Prinsip-prinsip penting seperti efisien, efektif, transparan, terbuka, bersaing, adil, dan akuntabel diatur di dalamnya.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'bab1_perpres16',
+                        title: 'BAB I Ketentuan Umum',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB I Ketentuan Umum Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 1:</strong> Dalam Peraturan Presiden ini yang dimaksud dengan:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Pengadaan Barang/Jasa Pemerintah adalah kegiatan untuk memperoleh Barang/Jasa oleh Kementerian/Lembaga/Perangkat Daerah/Institusi Lainnya yang prosesnya dimulai dari perencanaan kebutuhan sampai diselesaikannya seluruh kegiatan untuk memperoleh Barang/Jasa.</li>
+                                <li>Penyedia Barang/Jasa adalah Pelaku Usaha yang menyediakan Barang/Jasa berdasarkan Kontrak.</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: 'bab2_perpres16',
+                        title: 'BAB II Tujuan, Kebijakan, dan Prinsip',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">BAB II Tujuan, Kebijakan, dan Prinsip Perpres 16/2018</h4>
+                            <p class="mb-2"><strong>Pasal 2:</strong> Tujuan Pengadaan Barang/Jasa:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Menghasilkan Barang/Jasa yang tepat dari setiap uang yang dibelanjakan.</li>
+                                <li>Meningkatkan penggunaan produk dalam negeri.</li>
+                            </ul>
+                            <p class="mt-4"><strong>Pasal 6:</strong> Prinsip-prinsip Pengadaan Barang/Jasa meliputi:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Efisien, Efektif, Transparan, Terbuka, Bersaing, Adil, dan Akuntabel.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            },
+            {
+                id: 'perlem4_2024',
+                title: 'Perlem LKPP Nomor 4 Tahun 2024',
+                subtitle: 'Perubahan Atas Perlem LKPP Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah Melalui Penyedia',
+                content_html: `
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Ikhtisar Perlem LKPP 4 Tahun 2024</h3>
+                    <p class="mb-4">Peraturan Lembaga ini fokus pada pedoman pelaksanaan pengadaan barang/jasa pemerintah melalui penyedia, khususnya yang berkaitan dengan perubahan pada Peraturan Lembaga sebelumnya.</p>
+                    <p class="mb-4">Perubahan ini dimaksudkan untuk memberikan kejelasan dan efisiensi dalam proses pengadaan yang melibatkan pihak penyedia.</p>
+                `,
+                chapters: [
+                    {
+                        id: 'pasal1_perlem4',
+                        title: 'Pasal 1',
+                        content_html: `
+                            <h4 class="text-lg font-semibold mb-2 text-gray-800">Pasal 1 Perlem LKPP 4/2024</h4>
+                            <p>Beberapa ketentuan dalam Peraturan Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah Nomor 12 Tahun 2021 tentang Pedoman Pelaksanaan Pengadaan Barang/Jasa Pemerintah melalui Penyedia, diubah sebagai berikut:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Ketentuan Pasal 1 angka 10 diubah sehingga berbunyi "Pejabat Pengadaan adalah pejabat fungsional atau pejabat struktural yang diberi tugas, tanggung jawab, wewenang, dan hak secara penuh oleh PA/KPA untuk melaksanakan Pengadaan Barang/Jasa."</li>
+                                <li>Ketentuan Pasal 1 angka 15 diubah terkait proses pemilihan penyedia.</li>
+                            </ul>
+                        `
+                    }
+                ]
+            }
+        ];
+
+        const regulationList = document.getElementById('regulation-list');
+        const contentTitle = document.getElementById('content-title');
+        const contentBody = document.getElementById('content-body');
+        const subMenuContainer = document.getElementById('sub-menu-container');
+        const subMenuList = document.getElementById('sub-menu-list');
+        const searchInput = document.getElementById('search-input');
+
+        let activeRegulationId = null;
+        let activeChapterId = null;
+
+        // Function to render main regulations in the sidebar
+        function renderRegulations(filter = '') {
+            regulationList.innerHTML = ''; // Clear existing list
+            const filteredRegulations = regulationsData.filter(reg =>
+                reg.title.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.subtitle.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.content_html.toLowerCase().includes(filter.toLowerCase()) ||
+                reg.chapters.some(chap => chap.title.toLowerCase().includes(filter.toLowerCase()) || chap.content_html.toLowerCase().includes(filter.toLowerCase()))
+            );
+
+            if (filteredRegulations.length === 0 && filter !== '') {
+                regulationList.innerHTML = '<li class="p-2 text-gray-600">Tidak ada hasil ditemukan.</li>';
+                return;
+            }
+
+            filteredRegulations.forEach(reg => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${reg.id === activeRegulationId ? 'active' : ''}`;
+                button.textContent = reg.title;
+                button.onclick = () => selectRegulation(reg.id);
+                li.appendChild(button);
+                regulationList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a main regulation
+        function selectRegulation(regulationId) {
+            const selectedReg = regulationsData.find(reg => reg.id === regulationId);
+            if (selectedReg) {
+                activeRegulationId = regulationId;
+                activeChapterId = null; // Reset active chapter
+                contentTitle.textContent = selectedReg.title;
+                contentBody.innerHTML = `
+                    <div class="mb-4">
+                        <p class="text-gray-600 italic">${selectedReg.subtitle}</p>
+                        ${selectedReg.last_amended ? `<p class="text-sm text-gray-500">Terakhir diubah: ${selectedReg.last_amended}</p>` : ''}
+                    </div>
+                    ${selectedReg.content_html}
+                `;
+
+                // Render sub-menu (chapters)
+                renderSubMenu(selectedReg.chapters);
+                subMenuContainer.classList.remove('hidden');
+
+                // Update active class in sidebar
+                document.querySelectorAll('#regulation-list .menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`#regulation-list button[onclick*="${regulationId}"]`).classList.add('active');
+            }
+        }
+
+        // Function to render sub-menu (chapters)
+        function renderSubMenu(chapters) {
+            subMenuList.innerHTML = '';
+            chapters.forEach(chap => {
+                const li = document.createElement('li');
+                const button = document.createElement('button');
+                button.className = `menu-item w-full text-left p-2 rounded-md hover:bg-blue-100 ${chap.id === activeChapterId ? 'active' : ''}`;
+                button.textContent = chap.title;
+                button.onclick = () => selectChapter(chap.id);
+                li.appendChild(button);
+                subMenuList.appendChild(li);
+            });
+        }
+
+        // Function to handle selecting a chapter
+        function selectChapter(chapterId) {
+            const selectedReg = regulationsData.find(reg => reg.id === activeRegulationId);
+            if (selectedReg) {
+                const selectedChapter = selectedReg.chapters.find(chap => chap.id === chapterId);
+                if (selectedChapter) {
+                    activeChapterId = chapterId;
+                    contentTitle.textContent = `${selectedReg.title} - ${selectedChapter.title}`;
+                    contentBody.innerHTML = selectedChapter.content_html;
+
+                    // Update active class in sub-menu
+                    document.querySelectorAll('#sub-menu-list .menu-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    document.querySelector(`#sub-menu-list button[onclick*="${chapterId}"]`).classList.add('active');
+                }
+            }
+        }
+
+        // Search functionality
+        let searchTimeout = null;
+        searchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            const query = event.target.value;
+            searchTimeout = setTimeout(() => {
+                renderRegulations(query);
+                // Optionally clear main content and sub-menu if search is active
+                if (query !== '') {
+                    contentTitle.textContent = 'Hasil Pencarian';
+                    contentBody.innerHTML = '<p class="text-gray-600">Pilih item dari daftar di samping untuk melihat detail.</p>';
+                    subMenuContainer.classList.add('hidden');
+                } else {
+                    // Reset to default view if search is cleared
+                    contentTitle.textContent = 'Pilih Peraturan dari Menu';
+                    contentBody.innerHTML = '<p>Silakan pilih peraturan dari daftar di samping untuk melihat detailnya. Anda juga bisa menggunakan fitur pencarian di header untuk menemukan informasi yang Anda butuhkan.</p><p class="mt-4 text-sm text-gray-500">*Catatan: Ini adalah prototipe. Konten peraturan yang ditampilkan di sini adalah contoh (mock-up) dan tidak lengkap. Dalam aplikasi nyata, data ini akan diisi dari sumber peraturan yang sebenarnya.</p>';
+                    subMenuContainer.classList.add('hidden');
+                    activeRegulationId = null;
+                    activeChapterId = null;
+                }
+            }, 300); // Debounce search input
+        });
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRegulations();
+        });
+    </script>
+</body>
+</html>
